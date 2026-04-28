@@ -3,7 +3,7 @@
 #include <array>
 #include <cmath>
 
-static const double gravitational_constant {6.6743e-11};
+constexpr double gravitational_constant {6.6743e-11};
 
 struct Body {
   int id {};
@@ -12,21 +12,30 @@ struct Body {
   std::array<double, 2> velocity;
 };
 
-double get_distance(const std::array<double, 2>& body_1, const std::array<double, 2>& body_2 ) {
-  double x { body_1[0] - body_2[0] };
-  double y { body_1[1] - body_2[1] };
+auto get_distance(const std::array<double, 2>& body1, const std::array<double, 2>& body2) -> double {
+  double x { body1[0] - body2[0] };
+  double y { body1[1] - body2[1] };
   double distance { std::hypot(x, y) };
 
   return distance;
 }
 
+auto get_force_scalar(const double body1, const double body2, const double distance) -> double {
+  double force = { gravitational_constant * body1 * body2 / (distance * distance) };
+  return force;
+}
+
+auto get_unit_direction(const std::array<double, 2>& body1, const std::array<double, 2>& body2) -> std::array<double, 2> {
+  
+}
 
 auto main() -> int {
 
-  Body default0 {0, 10, {0.0, 1.0}, {0, 5} };
-  Body default1 {0, 10, {1, 0}, {5, 0} };
+  Body default0 {0, 10, {-1, 0}, {0, 5} };
+  Body default1 {1, 10, {1, 0}, {0, -5} };
 
   double distance { get_distance(default0.position, default1.position) };
+  double force_scalar { get_force_scalar(default0.mass, default1.mass, distance)};
 
   return 0;
 }
