@@ -12,10 +12,47 @@ struct Body {
   std::array<double, 2> velocity;
 };
 
+std::array<double, 2> operator+(const std::array<double, 2>& array1, const std::array<double, 2>& array2) {
+  double x { array1[0] + array2[0] };
+  double y { array1[1] + array2[1] };
+
+  return std::array<double, 2> {x, y};
+}
+std::array<double, 2> operator-(const std::array<double, 2>& array1, const std::array<double, 2>& array2) {
+  double x { array1[0] - array2[0] };
+  double y { array1[1] - array2[1] };
+
+  return std::array<double, 2> {x, y};
+}
+std::array<double, 2> operator*(const std::array<double, 2>& array1, const std::array<double, 2>& array2) {
+  double x { array1[0] * array2[0] };
+  double y { array1[1] * array2[1] };
+
+  return std::array<double, 2> {x, y};
+}
+std::array<double, 2> operator/(const std::array<double, 2>& array1, const std::array<double, 2>& array2) {
+  double x { array1[0] / array2[0] };
+  double y { array1[1] / array2[1] };
+
+  return std::array<double, 2> {x, y};
+}
+
+std::array<double, 2> operator*(const std::array<double, 2>& array1, const double multiplier) {
+  double x { array1[0] * multiplier };
+  double y { array1[1] * multiplier };
+
+  return std::array<double, 2> {x,y};
+}
+std::array<double, 2> operator/(const std::array<double, 2>& array1, const double multiplier) {
+  double x { array1[0] / multiplier };
+  double y { array1[1] / multiplier };
+
+  return std::array<double, 2> {x,y};
+}
+
 auto get_distance(const std::array<double, 2>& body1, const std::array<double, 2>& body2) -> double {
-  double x { body1[0] - body2[0] };
-  double y { body1[1] - body2[1] };
-  double distance { std::hypot(x, y) };
+  std::array<double, 2> vector { body1 - body2 };
+  double distance { std::hypot(vector[0], vector[1]) };
 
   return distance;
 }
@@ -27,53 +64,38 @@ auto get_force_scalar(const double body1, const double body2, const double dista
 }
 
 auto get_unit_direction(const std::array<double, 2>& body1, const std::array<double, 2>& body2, double distance) -> std::array<double, 2> {
-  double x { (body1[0]-body2[0]) / distance };
-  double y { (body1[1]-body2[1]) / distance };
-  std::array<double, 2> unit_direction {x, y};
+  std::array<double, 2> unit_direction { (body1 - body2) / distance };
 
   return unit_direction;
 }
 
-auto get_force_vector(const double force_scalar, const std::array<double, 2>& unit_direction) -> std::array<double, 2> {
-  double x { unit_direction[0] * force_scalar };
-  double y { unit_direction[1] * force_scalar };
-  std::array<double, 2> force_vector { x, y };
-
-  return force_vector;
-}
-
-auto get_acceleration_vector(const double mass, const std::array<double, 2>& force_vector) -> std::array<double, 2> {
-  double x { force_vector[0] / mass };
-  double y { force_vector[1] / mass };
-  std::array<double, 2> acceleration_vector = { x, y };
-
-  return acceleration_vector;
-}
-
 auto main() -> int {
-  double time_interval { 0.001 };
+  double time_interval { 60 };
 
-  Body default0 {0, 1e4, {-1, 0}, {0, 1000} };
-  Body default1 {1, 1e4, {1, 0}, {0, -1000} };
-  std::cout << "initial-positions: 0[" << default0.position[0] << ", " << default0.position[1] << "], 1[" << default1.position[0] << ", " << default1.position[1] << "].";
+  Body earth {0, 5.972e24, {0, 0}, {0, 0} };
+  Body moon {1, 7.348e21, {3.844e8, 0}, {0, 1022} };
+  std::cout << "initial-positions: 0[" << earth.position[0] << ", " << earth.position[1] << "], 1[" << moon.position[0] << ", " << moon.position[1] << "].";
   
   for (int i = 0; i < 100; i++) {
-    double distance { get_distance(default0.position, default1.position) };
-    double force_scalar { get_force_scalar(default0.mass, default1.mass, distance)};
-    std::array<double, 2> unit_direction { get_unit_direction(default0.position, default1.position, distance) };
-    std::array<double, 2> force_vector_def0 { get_force_vector(force_scalar, unit_direction) };
-    std::array<double, 2> force_vector_def1 { -force_vector_def0[0], -force_vector_def0[1] }; // TODO use operator overloading to replace this
-    std::array<double, 2> acceleration_def0 { get_acceleration_vector(default0.mass, force_vector_def0) };
-    std::array<double, 2> acceleration_def1 { get_acceleration_vector(default1.mass, force_vector_def1) };
+    double distance { get_distance(earth.position, moon.position) };
+    double force_scalar { get_force_scalar(earth.mass, moon.mass, distance)};
+    std::array<double, 2> unit_direction { get_unit_direction(earth.position, moon.position, distance) };
+    std::array<double, 2> force_vector_earth { unit_direction * force_scalar };
+    std::array<double, 2> force_vector_moon { unit_direction * -force_scalar };
 
-    std::array<double, 2> velocity_def0 { acceleration_def0[0] * time_interval, acceleration_def0[1] * time_interval };
-    std::array<double, 2> velocity_def1 { acceleration_def1[0] * time_interval, acceleration_def1[1] * time_interval };
-    std::array<double, 2> position_def0 { velocity_def0[0] * time_interval, velocity_def0[1] * time_interval };
-    std::array<double, 2> position_def1 { velocity_def1[0] * time_interval, velocity_def1[1] * time_interval };
-    default0.position = position_def0;
-    default1.position = position_def1;
+    std::array<double, 2> acceleration_earth { force_vector_earth / earth.mass };
+    std::array<double, 2> acceleration_moon { force_vector_moon / moon.mass };
+    std::array<double, 2> velocity_earth { earth.velocity + (acceleration_earth * time_interval) };
+    std::array<double, 2> velocity_moon { moon.velocity + (acceleration_moon * time_interval) };
+    earth.velocity = velocity_earth;
+    moon.velocity = velocity_moon;
 
-    std::cout << "\n position at interval1: 0[" << default0.position[0] << ", " << default0.position[1] << "], 1[" << default1.position[0] << ", " << default1.position[1] << "].";
+    std::array<double, 2> position_earth { earth.position + (velocity_earth * time_interval) };
+    std::array<double, 2> position_moon { moon.position + (velocity_moon * time_interval) };
+    earth.position = position_earth;
+    moon.position = position_moon;
+
+    std::cout << "\n position at interval1: 0[" << earth.position[0] << ", " << earth.position[1] << "], 1[" << moon.position[0] << ", " << moon.position[1] << "].";
   }
 
 
