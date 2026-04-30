@@ -2,14 +2,17 @@
 #include <string>
 #include <array>
 #include <cmath>
+#include <vector>
 
 constexpr double gravitational_constant {6.6743e-11};
+constexpr double time_interval {60};
 
 struct Body {
   int id {};
   double mass {};
   std::array<double, 2> position;
   std::array<double, 2> velocity;
+  std::array<double, 2> acceleration;
 };
 
 std::array<double, 2> operator+(const std::array<double, 2>& array1, const std::array<double, 2>& array2) {
@@ -17,6 +20,12 @@ std::array<double, 2> operator+(const std::array<double, 2>& array1, const std::
   double y { array1[1] + array2[1] };
 
   return std::array<double, 2> {x, y};
+}
+std::array<double, 2> operator+=(std::array<double, 2>& array1, const std::array<double, 2>& array2) {
+  array1[0] += array2[0];
+  array1[1] += array2[1];
+
+  return array1;
 }
 std::array<double, 2> operator-(const std::array<double, 2>& array1, const std::array<double, 2>& array2) {
   double x { array1[0] - array2[0] };
@@ -36,7 +45,6 @@ std::array<double, 2> operator/(const std::array<double, 2>& array1, const std::
 
   return std::array<double, 2> {x, y};
 }
-
 std::array<double, 2> operator*(const std::array<double, 2>& array1, const double multiplier) {
   double x { array1[0] * multiplier };
   double y { array1[1] * multiplier };
@@ -70,10 +78,9 @@ auto get_unit_direction(const std::array<double, 2>& body1, const std::array<dou
 }
 
 auto main() -> int {
-  double time_interval { 60 };
-
   Body earth {0, 5.972e24, {0, 0}, {0, 0} };
   Body moon {1, 7.348e21, {3.844e8, 0}, {0, 1022} };
+  std::vector<Body> bodies {earth, moon};
   std::cout << "initial-positions: 0[" << earth.position[0] << ", " << earth.position[1] << "], 1[" << moon.position[0] << ", " << moon.position[1] << "].";
   
   for (int i = 0; i < 100; i++) {
@@ -101,3 +108,26 @@ auto main() -> int {
 
   return 0;
 }
+
+void vv_update_pos(std::array<double, 2>& pos, const std::array<double, 2>& vel, const std::array<double, 2>& acc) {
+  pos+= (vel * time_interval + acc * time_interval * time_interval / 2);
+}
+
+std::array<double, 2> vv_get_acc_new() {}
+
+void vv_update_vel(std::array<double, 2>& vel, const std::array<double, 2>& acc_old, const std::array<double, 2>& acc_new) {
+  vel += (acc_old + acc_new) * time_interval / 2;
+}
+
+auto velocity_verlet(std::vector<Body>& bodies) -> void {
+  for (Body& body: bodies) {
+    vv_update_pos(body.position, body.velocity, body.acceleration);
+  };
+
+  for (Body& body: bodies) {
+    std::array<double, 2> acceleration_new { vv_get_acc_new() };
+    vv_update_vel(body.velocity, body.acceleration, acceleration_new);
+    body.acceleration = acceleration_new;
+  };
+}
+
