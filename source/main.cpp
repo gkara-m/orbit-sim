@@ -2,15 +2,11 @@
 
 #include <fstream>
 #include <iostream>
-#include <string>
 #include <array>
 #include <cmath>
 #include <vector>
 
 using json = nlohmann::json;
-
-constexpr double gravitational_constant {6.6743e-11};
-constexpr double time_interval {3600};
 
 struct Body {
   int id {};
@@ -92,8 +88,8 @@ auto get_distance(const std::array<double, 2>& body1, const std::array<double, 2
   return distance;
 }
 
-auto get_force_scalar(const double mass1, const double mass2, const double distance) -> double {
-  double force = { gravitational_constant * mass1 * mass2 / (distance * distance) };
+auto get_force_scalar(const double mass1, const double mass2, const double distance, const double g) -> double {
+  double force = { g * mass1 * mass2 / (distance * distance) };
 
   return force;
 }
@@ -104,17 +100,17 @@ auto get_unit_direction(const std::array<double, 2>& body1, const std::array<dou
   return unit_direction;
 }
 
-void vv_update_pos(std::array<double, 2>& pos, const std::array<double, 2>& vel, const std::array<double, 2>& acc) {
-  pos+= (vel * time_interval + acc * time_interval * time_interval / 2);
+void vv_update_pos(std::array<double, 2>& pos, const std::array<double, 2>& vel, const std::array<double, 2>& acc, const double dt) {
+  pos+= (vel * dt + acc * dt * dt / 2);
 }
 
-std::array<double, 2> vv_get_acc_new(const std::vector<Body>& bodies, const Body& body_current) {
+std::array<double, 2> vv_get_acc_new(const std::vector<Body>& bodies, const Body& body_current, const double g) {
 
   std::vector<std::array<double, 2>> accelerations {};
   for (const Body& body: bodies) {
     if (body != body_current) {
       double distance { get_distance(body.position, body_current.position) };
-      double force_scalar { get_force_scalar(body.mass, body_current.mass, distance) };
+      double force_scalar { get_force_scalar(body.mass, body_current.mass, distance, g) };
       std::array<double, 2> unit_direction { get_unit_direction(body.position, body_current.position, distance) };
       std::array<double, 2> force_vector { unit_direction * force_scalar };
       accelerations.push_back( force_vector / body_current.mass);
@@ -128,19 +124,19 @@ std::array<double, 2> vv_get_acc_new(const std::vector<Body>& bodies, const Body
   return acc_total;
 } // TODO refactor to not need accelerations vector
 
-void vv_update_vel(std::array<double, 2>& vel, const std::array<double, 2>& acc_old, const std::array<double, 2>& acc_new) {
-  vel += (acc_old + acc_new) * time_interval / 2;
+void vv_update_vel(std::array<double, 2>& vel, const std::array<double, 2>& acc_old, const std::array<double, 2>& acc_new, const double dt) {
+  vel += (acc_old + acc_new) * dt / 2;
 }
 
-void velocity_verlet(std::vector<Body>& bodies) {
+void velocity_verlet(std::vector<Body>& bodies, const double dt, const double g) {
   for (Body& body: bodies) {
-    vv_update_pos(body.position, body.velocity, body.acceleration);
+    vv_update_pos(body.position, body.velocity, body.acceleration, dt);
   };
 
   for (Body& body: bodies) {
     
-    std::array<double, 2> acceleration_new { vv_get_acc_new(bodies, body) };
-    vv_update_vel(body.velocity, body.acceleration, acceleration_new);
+    std::array<double, 2> acceleration_new { vv_get_acc_new(bodies, body, g) };
+    vv_update_vel(body.velocity, body.acceleration, acceleration_new, dt);
     body.acceleration = acceleration_new;
   };
 
@@ -148,23 +144,29 @@ void velocity_verlet(std::vector<Body>& bodies) {
   std::cout << "\n new positions: [" << bodies[0].position[0] << ", " << bodies[0].position[1] << "], 1[" << bodies[1].position[0] << ", " << bodies[1].position[1] << "].";
 }
 
-auto main() -> int {
+Config startup() {
   std::ifstream file("/home/user/dev/c++/orbital_sim/data/config.json");
   json j {};
   file >> j;
+  return { j.get<Config>() };
+}
 
-  Config conf {j.get<Config>()};
-  std::cout << "Loaded g: " << conf.settings.g << "\n";
-  std::cout << "Loaded dt: " << conf.settings.dt << "\n";
+auto main() -> int {
+  Config conf { startup() };
+  std::cout << "Loaded config.json" << "\n";
   
-
-  Body earth {0, 5.972e24, {0, 0}, {0, 0} };
-  Body moon {1, 7.348e21, {3.844e8, 0}, {0, 1022} };
-  std::vector<Body> bodies {earth, moon};
-  std::cout << "initial-positions: 0[" << earth.position[0] << ", " << earth.position[1] << "], 1[" << moon.position[0] << ", " << moon.position[1] << "].";
+  std::cout << "Initial Positions: ";
+  for (Body& body: conf.bodies) {
+    std::cout << "[" << body.position[0] << "," << body.position[1] << "] ";
+  };
+  std::cout << "\n";
   
   for (int i = 0; i < 100; i++) {
-    velocity_verlet(bodies);
+    velocity_verlet(conf.bodies, conf.settings.dt, conf.settings.g);
+    for (Body& body: conf.bodies) {
+      std::cout << "[" << body.position[0] << "," << body.position[1] << "] ";
+    };
+    std::cout << "\n";
   }
 
   return 0;
