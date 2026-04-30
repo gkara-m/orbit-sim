@@ -1,8 +1,13 @@
+#include <nlohmann/json.hpp>
+
+#include <fstream>
 #include <iostream>
 #include <string>
 #include <array>
 #include <cmath>
 #include <vector>
+
+using json = nlohmann::json;
 
 constexpr double gravitational_constant {6.6743e-11};
 constexpr double time_interval {3600};
@@ -14,6 +19,19 @@ struct Body {
   std::array<double, 2> velocity;
   std::array<double, 2> acceleration;
 };
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Body, id, mass, position, velocity, acceleration)
+
+struct Settings {
+  double g;
+  double dt;
+};
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Settings, g, dt)
+
+struct Config {
+  Settings settings;
+  std::vector<Body> bodies;
+};
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Config, settings, bodies)
 
 // ARRAY OPERATOR OVERRIDES
 std::array<double, 2> operator+(const std::array<double, 2>& array1, const std::array<double, 2>& array2) {
@@ -131,17 +149,23 @@ void velocity_verlet(std::vector<Body>& bodies) {
 }
 
 auto main() -> int {
+  std::ifstream file("/home/user/dev/c++/orbital_sim/data/config.json");
+  json j {};
+  file >> j;
+
+  Config conf {j.get<Config>()};
+  std::cout << "Loaded g: " << conf.settings.g << "\n";
+  std::cout << "Loaded dt: " << conf.settings.dt << "\n";
+  
+
   Body earth {0, 5.972e24, {0, 0}, {0, 0} };
   Body moon {1, 7.348e21, {3.844e8, 0}, {0, 1022} };
   std::vector<Body> bodies {earth, moon};
   std::cout << "initial-positions: 0[" << earth.position[0] << ", " << earth.position[1] << "], 1[" << moon.position[0] << ", " << moon.position[1] << "].";
   
   for (int i = 0; i < 100; i++) {
-    
     velocity_verlet(bodies);
-
   }
-
 
   return 0;
 }

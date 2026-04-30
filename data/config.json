@@ -1,0 +1,22 @@
+{
+  "settings": {
+    "g": 6.6743e-11,
+    "dt": 3600
+  },
+  "bodies": [
+    {
+      "id": 0,
+      "mass": 5.972e24,
+      "position": [0.0, 0.0],
+      "velocity": [0.0, 0.0],
+      "acceleration": [0.0, 0.0]
+    },
+    {
+      "id": 1,
+      "mass": 7.348e21,
+      "position": [3.844e8, 0.0],
+      "velocity": [0.0, 1022.0],
+      "acceleration": [0.0, 0.0]
+    }
+  ]
+}
