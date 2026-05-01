@@ -35,23 +35,19 @@ void vv_update_pos(std::array<double, 2>& pos, const std::array<double, 2>& vel,
 
 std::array<double, 2> vv_get_acc_new(const std::vector<Body>& bodies, const Body& body_current, const double g) {
 
-  std::vector<std::array<double, 2>> accelerations {};
+  std::array<double, 2> acc_total {0,0};
   for (const Body& body: bodies) {
-    if (body != body_current) {
+    if (&body != &body_current) {
       double distance { get_distance(body.position, body_current.position) };
       double force_scalar { get_force_scalar(body.mass, body_current.mass, distance, g) };
       std::array<double, 2> unit_direction { get_unit_direction(body.position, body_current.position, distance) };
       std::array<double, 2> force_vector { unit_direction * force_scalar };
-      accelerations.push_back( force_vector / body_current.mass);
+      acc_total += force_vector / body_current.mass;
     };
   };
 
-  std::array<double, 2> acc_total {0,0};
-  for (const std::array<double, 2>& acc: accelerations) {
-    acc_total += acc;
-  };
   return acc_total;
-} // TODO refactor to not need accelerations vector
+}
 
 void vv_update_vel(std::array<double, 2>& vel, const std::array<double, 2>& acc_old, const std::array<double, 2>& acc_new, const double dt) {
   vel += (acc_old + acc_new) * dt / 2;
@@ -74,7 +70,7 @@ void velocity_verlet(std::vector<Body>& bodies, const double dt, const double g)
 }
 
 Config startup() {
-  std::ifstream file("/home/user/dev/c++/orbit-sim/data/config.json");
+  std::ifstream file("data/config.json");
   json j {};
   file >> j;
   Config config {};
