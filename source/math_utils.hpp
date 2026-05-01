@@ -10,3 +10,5 @@ std::array<double, 2> operator*(const std::array<double, 2>& array1, const std::
 std::array<double, 2> operator/(const std::array<double, 2>& array1, const std::array<double, 2>& array2);
 std::array<double, 2> operator*(const std::array<double, 2>& array1, const double multiplier);
 std::array<double, 2> operator/(const std::array<double, 2>& array1, const double multiplier);
+bool operator!=(const Body& body1, const Body& body2);
+bool operator==(const Body& body1, const Body& body2);

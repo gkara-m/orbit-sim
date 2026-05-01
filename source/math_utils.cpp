@@ -43,3 +43,11 @@ std::array<double, 2> operator/(const std::array<double, 2>& array1, const doubl
 
   return std::array<double, 2> {x,y};
 }
+
+// BODY OPERATOR OVERRRIDES
+bool operator!=(const Body& body1, const Body& body2) {
+  return body1.id != body2.id;
+}
+bool operator==(const Body& body1, const Body& body2) {
+  return body1.id == body2.id;
+}

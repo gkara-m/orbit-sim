@@ -10,15 +10,6 @@
 
 using json = nlohmann::json;
 
-
-// BODY OPERATOR OVERRRIDES
-bool operator!=(const Body& body1, const Body& body2) {
-  return body1.id != body2.id;
-}
-bool operator==(const Body& body1, const Body& body2) {
-  return body1.id == body2.id;
-}
-
 auto get_distance(const std::array<double, 2>& body1, const std::array<double, 2>& body2) -> double {
   std::array<double, 2> vector { body1 - body2 };
   double distance { std::hypot(vector[0], vector[1]) };
