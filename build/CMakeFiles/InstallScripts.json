@@ -1,7 +1,0 @@
-{
-	"InstallScripts" : 
-	[
-		"/home/user/dev/c++/orbit-sim/build/cmake_install.cmake"
-	],
-	"Parallel" : false
-}
