@@ -4,6 +4,8 @@
 
 #include <fstream>
 #include <iostream>
+#include <thread>
+#include <mutex>
 
 using json = nlohmann::json;
 
@@ -17,9 +19,18 @@ Config startup() {
   return config;
 }
 
+auto start_ui_communicator_thread() {
+  std::mutex comm_mutex {};
+  auto comm_thread {std::thread([&comm_mutex](){
+    
+  })};
+};
+
 auto main() -> int {
   Config conf { startup() };
   std::cout << "Loaded config.json" << "\n";
+  
+  start_ui_communicator_thread();
   
   std::cout << "Initial Positions: ";
   for (Body& body: conf.bodies) {
