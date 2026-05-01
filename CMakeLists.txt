@@ -5,6 +5,7 @@ find_package(nlohmann_json REQUIRED)
 
 add_executable(orbital_sim
   source/main.cpp
+  source/physics.cpp
   source/math_utils.cpp
   source/types.cpp
 )
