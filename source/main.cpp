@@ -1,5 +1,7 @@
 #include <nlohmann/json.hpp>
 
+#include "math_utils.hpp"
+
 #include <fstream>
 #include <iostream>
 #include <array>
@@ -8,71 +10,6 @@
 
 using json = nlohmann::json;
 
-struct Body {
-  int id {};
-  double mass {};
-  std::array<double, 2> position;
-  std::array<double, 2> velocity;
-  std::array<double, 2> acceleration;
-};
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Body, id, mass, position, velocity, acceleration)
-
-struct Settings {
-  double g;
-  double dt;
-  int steps;
-};
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Settings, g, dt, steps)
-
-struct Config {
-  Settings settings;
-  std::vector<Body> bodies;
-};
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Config, settings, bodies)
-
-// ARRAY OPERATOR OVERRIDES
-std::array<double, 2> operator+(const std::array<double, 2>& array1, const std::array<double, 2>& array2) {
-  double x { array1[0] + array2[0] };
-  double y { array1[1] + array2[1] };
-
-  return std::array<double, 2> {x, y};
-}
-std::array<double, 2> operator+=(std::array<double, 2>& array1, const std::array<double, 2>& array2) {
-  array1[0] += array2[0];
-  array1[1] += array2[1];
-
-  return array1;
-}
-std::array<double, 2> operator-(const std::array<double, 2>& array1, const std::array<double, 2>& array2) {
-  double x { array1[0] - array2[0] };
-  double y { array1[1] - array2[1] };
-
-  return std::array<double, 2> {x, y};
-}
-std::array<double, 2> operator*(const std::array<double, 2>& array1, const std::array<double, 2>& array2) {
-  double x { array1[0] * array2[0] };
-  double y { array1[1] * array2[1] };
-
-  return std::array<double, 2> {x, y};
-}
-std::array<double, 2> operator/(const std::array<double, 2>& array1, const std::array<double, 2>& array2) {
-  double x { array1[0] / array2[0] };
-  double y { array1[1] / array2[1] };
-
-  return std::array<double, 2> {x, y};
-}
-std::array<double, 2> operator*(const std::array<double, 2>& array1, const double multiplier) {
-  double x { array1[0] * multiplier };
-  double y { array1[1] * multiplier };
-
-  return std::array<double, 2> {x,y};
-}
-std::array<double, 2> operator/(const std::array<double, 2>& array1, const double multiplier) {
-  double x { array1[0] / multiplier };
-  double y { array1[1] / multiplier };
-
-  return std::array<double, 2> {x,y};
-}
 
 // BODY OPERATOR OVERRRIDES
 bool operator!=(const Body& body1, const Body& body2) {
@@ -149,7 +86,9 @@ Config startup() {
   std::ifstream file("/home/user/dev/c++/orbit-sim/data/config.json");
   json j {};
   file >> j;
-  return { j.get<Config>() };
+  Config config {};
+  from_json(j, config);
+  return config;
 }
 
 auto main() -> int {

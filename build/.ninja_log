@@ -1,7 +1,12 @@
 # ninja log v7
-1	8366	1777606631244057240	CMakeFiles/orbital_sim.dir/source/main.cpp.o	fe3be924ea66a8b8
-8366	8537	1777606639610183360	orbital_sim	18d73203dc2e5c9f
-2	8184	1777606716491312844	CMakeFiles/orbital_sim.dir/source/main.cpp.o	fe3be924ea66a8b8
-8184	8355	1777606724673703631	orbital_sim	18d73203dc2e5c9f
-3	8175	1777606887000767673	CMakeFiles/orbital_sim.dir/source/main.cpp.o	fe3be924ea66a8b8
-8176	8344	1777606895173412274	orbital_sim	18d73203dc2e5c9f
+2	8222	1777608355613839610	CMakeFiles/orbital_sim.dir/source/main.cpp.o	fe3be924ea66a8b8
+8222	8397	1777608363833373208	orbital_sim	be42764313e62266
+1	52	1777609668360160194	build.ninja	8dcf9fe113d99130
+1	52	1777609668359160192	/home/user/dev/c++/orbit-sim/build/cmake_install.cmake	8dcf9fe113d99130
+3	198	1777608355614839675	CMakeFiles/orbital_sim.dir/source/math_utils.cpp.o	aeceb40217a1d3af
+1	49	1777609668360160194	build.ninja	8dcf9fe113d99130
+1	49	1777609668360160194	/home/user/dev/c++/orbit-sim/build/cmake_install.cmake	8dcf9fe113d99130
+3	725	1777609668372160230	CMakeFiles/orbital_sim.dir/source/math_utils.cpp.o	aeceb40217a1d3af
+3	3841	1777609668373403302	CMakeFiles/orbital_sim.dir/source/types.cpp.o	c1a5c459db0ff5c1
+2	7612	1777609668371160227	CMakeFiles/orbital_sim.dir/source/main.cpp.o	fe3be924ea66a8b8
+7612	7782	1777609675981183861	orbital_sim	c9deb44dc2125e3
