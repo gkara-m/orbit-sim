@@ -1,0 +1,3 @@
+/home/user/dev/c++/orbit-sim/build/CMakeFiles/orbital_sim.dir
+/home/user/dev/c++/orbit-sim/build/CMakeFiles/edit_cache.dir
+/home/user/dev/c++/orbit-sim/build/CMakeFiles/rebuild_cache.dir
