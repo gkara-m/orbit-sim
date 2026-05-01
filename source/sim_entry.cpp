@@ -42,7 +42,7 @@ auto start_ui_communicator_thread(const Config conf) {
   comm_thread.detach();
 }; // TODO
 
-auto main() -> int {
+auto sim_entry() -> int {
   Config conf { startup() };
   std::cout << "Loaded config.json" << "\n";
   
@@ -65,4 +65,3 @@ auto main() -> int {
 
   return 0;
 }
-

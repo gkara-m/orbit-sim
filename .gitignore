@@ -1,3 +1,11 @@
-build/*
+# Nix
 .direnv/
+
+# Node / TypeScript
+node_modules/
+
+# C++
+build/
+
+# LSP
 compile_commands.json
