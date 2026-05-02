@@ -1,8 +1,7 @@
 {
-  "settings": {
+  "physics": {
     "g": 6.6743e-11,
-    "dt": 3600,
-    "steps": 100
+    "dt": 1
   },
   "bodies": [
     {
@@ -20,7 +19,8 @@
       "acceleration": [0.0, 0.0]
     }
   ],
-  "uiSettings": {
-    "gui": 1
+  "settings": {
+    "gui": 1,
+    "steps": 240000
   }
 }

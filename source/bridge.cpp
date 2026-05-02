@@ -1,39 +1,48 @@
 #include <iostream>
 #include <napi.h>
 #include <thread>
+#include <vector>
 #include "sim_entry.hpp"
 
-auto napi_extract_array(const Napi::Array& ts_array) {
-  double x {ts_array.Get(int(0)).As<Napi::Number>()};
-  double y {ts_array.Get(int(1)).As<Napi::Number>()};
-  return std::array<double, 2> {x, y};
-}
-
 Config ts_to_conf(const Napi::Object& ts_config) {
+
   Napi::Object ts_settings { ts_config.Get("settings").As<Napi::Object>() };
-  double g { ts_settings.Get("g").As<Napi::Number>() };
-  double dt { ts_settings.Get("dt").As<Napi::Number>() };
+  int gui { ts_settings.Get("gui").As<Napi::Number>().Int32Value() };
   int steps { ts_settings.Get("steps").As<Napi::Number>().Int32Value() };
-  Settings settings {g, dt, steps};
+  Settings settings { gui, steps };
 
-  Napi::Array ts_bodies { ts_config.Get("bodies").As<Napi::Array>() };
-  std::vector<Body> bodies {};
-  for (int i = 0; i < ts_bodies.Length(); i++) {
-    Napi::Object ts_body {ts_bodies.Get(i).As<Napi::Object>()};
-    Body body {};
-    body.id = ts_body.Get("id").As<Napi::Number>().Int32Value();
-    body.mass = ts_body.Get("mass").As<Napi::Number>();
-    body.position = napi_extract_array(ts_body.Get("position").As<Napi::Array>());
-    body.velocity = napi_extract_array(ts_body.Get("velocity").As<Napi::Array>());
-    body.acceleration = napi_extract_array(ts_body.Get("acceleration").As<Napi::Array>());
-    bodies.push_back(body);
-  }
 
-  Napi::Object ts_ui_settings { ts_config.Get("uiSettings").As<Napi::Object>() };
-  int gui { ts_ui_settings.Get("gui").As<Napi::Number>().Int32Value() };
-  UISettings ui_settings { gui };
+  Napi::Object ts_physics { ts_config.Get("physics").As<Napi::Object>() };
+  double g { ts_physics.Get("g").As<Napi::Number>() };
+  double dt { ts_physics.Get("dt").As<Napi::Number>() };
+  Physics physics {g, dt};
   
-  return Config {settings, bodies, ui_settings};
+  // Parse every body and push parsed to vector
+  Napi::Array ts_bodies { ts_config.Get("bodies").As<Napi::Array>() };
+  std::vector<double> masses {};
+  std::vector<double> positions {};
+  std::vector<double> velocities {};
+  std::vector<double> accelerations {};
+  for (int i {0}; i < ts_bodies.Length(); ++i) {
+    Napi::Object ts_body {ts_bodies.Get(i).As<Napi::Object>()};
+    masses.push_back(ts_body.Get("mass").As<Napi::Number>());
+    Napi::Array position_array {ts_body.Get("position").As<Napi::Array>()};
+    for (int j {0}; j < position_array.Length(); ++j) {
+      positions.push_back(position_array.Get(j).As<Napi::Number>());
+    };
+    Napi::Array velocity_array {ts_body.Get("velocity").As<Napi::Array>()};
+    for (int j {0}; j < velocity_array.Length(); ++j) {
+      velocities.push_back(velocity_array.Get(j).As<Napi::Number>());
+    };
+    Napi::Array acceleration_array {ts_body.Get("velocity").As<Napi::Array>()};
+    for (int j {0}; j < acceleration_array.Length(); ++j) {
+      accelerations.push_back(acceleration_array.Get(j).As<Napi::Number>());
+    };
+  };
+  
+  State state { physics, masses, positions, velocities, accelerations };
+  
+  return Config { state, settings };
 }
 
 Napi::Value start_sim(const Napi::CallbackInfo& info) {

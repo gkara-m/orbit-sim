@@ -18,7 +18,6 @@ add_library(${PROJECT_NAME} MODULE
   source/bridge.cpp
   source/sim_entry.cpp
   source/physics.cpp
-  source/math_utils.cpp
 )
 
 # treat as SYSTEM headers to remove 3rd party warnings

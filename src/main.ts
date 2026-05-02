@@ -6,10 +6,14 @@ const confPath: string = "data/config.json";
 const orbitSimPath: string = "../build/Release/orbit_sim.node";
 const bgColour: r.Color = {r: 30, g: 30, b: 30, a: 255};
 
-interface Settings {
+interface Physics {
   g: number;
   dt: number;
+}
+
+interface Settings {
   steps: number;
+  gui: number; // 0 = CLI, 1 = GUI
 }
 
 interface Body {
@@ -20,15 +24,10 @@ interface Body {
   acceleration: number[];
 }
 
-interface UISettings {
-  // 0 = no gui, 1 = raylib gui
-  gui: number;
-}
-
 interface Config {
-  settings: Settings;
+  physics: Physics;
   bodies: Body[];
-  uiSettings: UISettings;
+  settings: Settings;
 }
 
 function runRaylibGUI() {
@@ -54,9 +53,6 @@ const require = createRequire(import.meta.url)
 const orbitSim = require(orbitSimPath);
 orbitSim.start(data);
 
-if (data.uiSettings.gui == 1) {
+if (data.settings.gui == 1) {
   runRaylibGUI();
 }
-
-if (data.uiSettings.gui == 1) {
-};

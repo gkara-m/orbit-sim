@@ -1,24 +1,30 @@
 #pragma once
-#include <vector>
-#include <array>
 
-struct Body {
-  int id {};
-  double mass {};
-  std::array<double, 2> position {};
-  std::array<double, 2> velocity {};
-  std::array<double, 2> acceleration {};
-};
-struct Settings {
+#include <vector>
+
+// struct Body {
+//   int id {};
+//   double mass {};
+//   std::array<double, 2> position {};
+//   std::array<double, 2> velocity {};
+//   std::array<double, 2> acceleration {};
+// };
+struct Physics {
   double g {};
   double dt {};
+};
+struct Settings {
+  int gui {};
   int steps {};
 };
-struct UISettings {
-  int gui {};
+struct State {
+  Physics physics {};
+  std::vector<double> masses;
+  std::vector<double> positions;
+  std::vector<double> velocities;
+  std::vector<double> accelerations;
 };
 struct Config {
+  State state {};
   Settings settings {};
-  std::vector<Body> bodies {};
-  UISettings ui_settings {};
 };

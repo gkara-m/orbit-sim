@@ -1,5 +1,5 @@
 #pragma once
 
-#include "math_utils.hpp"
+#include "types.hpp"
 
-void velocity_verlet(std::vector<Body>& bodies, const double dt, const double g);
+void velocity_verlet(State& state, const size_t num_bodies);

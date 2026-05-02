@@ -29,20 +29,22 @@ auto start_ui_communicator_thread(const Config conf) {
 
 auto sim_entry(Config conf) -> int {
   std::cout << "Loaded config.json" << "\n";
+  State state { conf.state };
   
   // start_ui_communicator_thread(conf);
   
   std::cout << "Initial Positions: ";
-  for (Body& body: conf.bodies) {
-    std::cout << "[" << body.position[0] << "," << body.position[1] << "] ";
+  size_t num_bodies {state.masses.size()};
+  for (size_t i {0}; i < num_bodies; ++i) {
+    std::cout << "[" << state.positions[2*i] << "," << state.positions[2*i+1] << "] ";
   };
-  std::cout << "\n";
-  
+
   for (int i = 0; i < conf.settings.steps; i++) {
 
-    velocity_verlet(conf.bodies, conf.settings.dt, conf.settings.g);
-    for (Body& body: conf.bodies) {
-      std::cout << "[" << body.position[0] << "," << body.position[1] << "] ";
+    velocity_verlet(state, num_bodies);
+
+    for (size_t i {0}; i < num_bodies; ++i) {
+      std::cout << "[" << state.positions[2*i] << "," << state.positions[2*i+1] << "] ";
     };
     std::cout << "\n";
   }
