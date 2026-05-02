@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "ts-node src/main.ts",
+    "start": "npm run build && tsx src/main.ts",
     "build": "cmake-js compile"
   },
   "keywords": [],
@@ -17,6 +17,7 @@
     "node-addon-api": "^8.7.0"
   },
   "devDependencies": {
-    "@types/node": "^25.6.0"
+    "@types/node": "^25.6.0",
+    "tsx": "^4.21.0"
   }
 }

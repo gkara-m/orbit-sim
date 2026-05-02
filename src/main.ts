@@ -1,6 +1,8 @@
 import fs from "fs";
+import { createRequire } from "module";
+const require = createRequire(import.meta.url)
 
-const filePath: string = "/home/user/dev/c++/orbit-sim/data/config.json";
+const filePath: string = "data/config.json";
 
 const jsonString = fs.readFileSync(filePath, "utf8");
 
@@ -24,3 +26,6 @@ interface Config {
 }
 
 const data: Config = JSON.parse(jsonString);
+
+const orbit_sim = require("../build/Release/orbit_sim.node");
+orbit_sim.start(data);

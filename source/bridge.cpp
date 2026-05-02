@@ -2,7 +2,12 @@
 #include <sim_entry.hpp>
 
 Napi::Value start_sim(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
+  Napi::Env env { info.Env() };
+
+  Napi::Object config { info[0].As<Napi::Object>() };
+
+  Napi::Object settings { config.Get("settings").As<Napi::Object>() };
+  double g { settings.Get("g").As<Napi::Number>() };
 
   sim_entry();
 
@@ -15,4 +20,4 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
     return exports;
 }
 
-NODE_API_MODULE(orbital_sim, Init)
+NODE_API_MODULE(orbit_sim, Init)
