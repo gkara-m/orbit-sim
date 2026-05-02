@@ -1,4 +1,4 @@
-#include <array>
+#include <iostream>
 #include <napi.h>
 #include "sim_entry.hpp"
 
@@ -33,7 +33,10 @@ Napi::Value start_sim(const Napi::CallbackInfo& info) {
   }
   
   Config conf {settings, bodies};
-  sim_entry(conf);
+  int exit_code {sim_entry(conf)};
+  if (exit_code != 0) {
+    std::cout << exit_code;
+  };
 
   return Napi::String::New(env, "Simulation bridge initialised");
 }

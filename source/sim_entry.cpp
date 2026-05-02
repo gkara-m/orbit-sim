@@ -1,25 +1,10 @@
-#include <nlohmann/json.hpp>
-
 #include "physics.hpp"
 #include "sim_entry.hpp"
 
-#include <fstream>
 #include <iostream>
 #include <thread>
 #include <mutex>
 #include <chrono>
-
-using json = nlohmann::json;
-
-
-Config startup() {
-  std::ifstream file("data/config.json");
-  json j {};
-  file >> j;
-  Config config {};
-  from_json(j, config);
-  return config;
-}
 
 // TODO
 auto ui_send_data() {}
@@ -43,7 +28,6 @@ auto start_ui_communicator_thread(const Config conf) {
 }; // TODO
 
 auto sim_entry(Config& conf) -> int {
-  // Config conf { startup() };
   std::cout << "Loaded config.json" << "\n";
   
   // start_ui_communicator_thread(conf);

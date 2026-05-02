@@ -1,8 +1,6 @@
 #pragma once
 #include <vector>
 #include <array>
-#include <nlohmann/json_fwd.hpp>
-using json = nlohmann::json;
 
 struct Body {
   int id {};
@@ -20,7 +18,3 @@ struct Config {
   Settings settings;
   std::vector<Body> bodies;
 };
-
-void from_json(const json& j, Body& body);
-void from_json(const json& j, Settings& settings);
-void from_json(const json& j, Config& config);

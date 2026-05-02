@@ -13,9 +13,9 @@ pkgs.mkShell {
     typescript-language-server
   ];
 
-  buildInputs = with pkgs; [
-    nlohmann_json
-  ];
+  # buildInputs = with pkgs; [
+  #   nlohmann_json
+  # ];
 
   shellHook = ''
     export PATH="$PWD/node_modules/.bin:$PATH"

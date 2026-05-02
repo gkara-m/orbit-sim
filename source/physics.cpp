@@ -1,9 +1,6 @@
 #include "physics.hpp"
 
-#include <array>
 #include <cmath>
-#include <vector>
-
 
 auto get_distance(const std::array<double, 2>& body1, const std::array<double, 2>& body2) -> double {
   std::array<double, 2> vector { body1 - body2 };
