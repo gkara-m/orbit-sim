@@ -3,9 +3,11 @@
 
 # Node / TypeScript
 node_modules/
+dist/
 
 # C++
 build/
+.cache/
 
 # LSP
 compile_commands.json

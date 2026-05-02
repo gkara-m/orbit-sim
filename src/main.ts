@@ -1,10 +1,9 @@
 import fs from "fs";
 import { createRequire } from "module";
-const require = createRequire(import.meta.url)
+import r from "raylib";
 
-const filePath: string = "data/config.json";
-
-const jsonString = fs.readFileSync(filePath, "utf8");
+const confPath: string = "data/config.json";
+const orbitSimPath: string = "../build/Release/orbit_sim.node";
 
 interface Settings {
   g: number;
@@ -20,12 +19,24 @@ interface Body {
   acceleration: number[];
 }
 
+interface UISettings {
+  gui: number;
+}
+
 interface Config {
   settings: Settings;
   bodies: Body[];
+  uiSettings: UISettings;
 }
 
+
+const jsonString = fs.readFileSync(confPath, "utf8");
 const data: Config = JSON.parse(jsonString);
 
-const orbit_sim = require("../build/Release/orbit_sim.node");
-orbit_sim.start(data);
+if (data.uiSettings.gui == 0) {
+  r.InitWindow(800, 800, "Orbit Sim");
+}
+
+const require = createRequire(import.meta.url)
+const orbitSim = require(orbitSimPath);
+orbitSim.start(data);

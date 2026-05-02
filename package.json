@@ -14,7 +14,8 @@
   "description": "",
   "dependencies": {
     "cmake-js": "^8.0.0",
-    "node-addon-api": "^8.7.0"
+    "node-addon-api": "^8.7.0",
+    "raylib": "^0.14.0"
   },
   "devDependencies": {
     "@types/node": "^25.6.0",

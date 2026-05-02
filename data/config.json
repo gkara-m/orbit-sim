@@ -19,5 +19,8 @@
       "velocity": [0.0, 1022.0],
       "acceleration": [0.0, 0.0]
     }
-  ]
+  ],
+  "ui-settings": {
+    "gui": 0
+  }
 }
