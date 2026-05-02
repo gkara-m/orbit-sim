@@ -5,16 +5,20 @@
 struct Body {
   int id {};
   double mass {};
-  std::array<double, 2> position;
-  std::array<double, 2> velocity;
-  std::array<double, 2> acceleration;
+  std::array<double, 2> position {};
+  std::array<double, 2> velocity {};
+  std::array<double, 2> acceleration {};
 };
 struct Settings {
-  double g;
-  double dt;
-  int steps;
+  double g {};
+  double dt {};
+  int steps {};
+};
+struct UISettings {
+  int gui {};
 };
 struct Config {
-  Settings settings;
-  std::vector<Body> bodies;
+  Settings settings {};
+  std::vector<Body> bodies {};
+  UISettings ui_settings {};
 };

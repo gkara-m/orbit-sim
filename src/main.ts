@@ -43,19 +43,20 @@ function runRaylibGUI() {
     r.ClearBackground(bgColour);
     r.EndDrawing();
   };
+
+  r.CloseWindow();
 }
 
 const jsonString = fs.readFileSync(confPath, "utf8");
 const data: Config = JSON.parse(jsonString);
-
-if (data.uiSettings.gui == 1) {
-  runRaylibGUI();
-}
 
 const require = createRequire(import.meta.url)
 const orbitSim = require(orbitSimPath);
 orbitSim.start(data);
 
 if (data.uiSettings.gui == 1) {
-  r.CloseWindow();
+  runRaylibGUI();
+}
+
+if (data.uiSettings.gui == 1) {
 };

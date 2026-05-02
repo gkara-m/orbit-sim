@@ -1,5 +1,6 @@
 #include <iostream>
 #include <napi.h>
+#include <thread>
 #include "sim_entry.hpp"
 
 auto napi_extract_array(const Napi::Array& ts_array) {
@@ -8,11 +9,7 @@ auto napi_extract_array(const Napi::Array& ts_array) {
   return std::array<double, 2> {x, y};
 }
 
-Napi::Value start_sim(const Napi::CallbackInfo& info) {
-  Napi::Env env { info.Env() };
-
-  Napi::Object ts_config { info[0].As<Napi::Object>() };
-
+Config ts_to_conf(const Napi::Object& ts_config) {
   Napi::Object ts_settings { ts_config.Get("settings").As<Napi::Object>() };
   double g { ts_settings.Get("g").As<Napi::Number>() };
   double dt { ts_settings.Get("dt").As<Napi::Number>() };
@@ -31,16 +28,33 @@ Napi::Value start_sim(const Napi::CallbackInfo& info) {
     body.acceleration = napi_extract_array(ts_body.Get("acceleration").As<Napi::Array>());
     bodies.push_back(body);
   }
-  
-  Config conf {settings, bodies};
-  int exit_code {sim_entry(conf)};
-  if (exit_code != 0) {
-    std::cout << exit_code;
-  };
 
-  return Napi::String::New(env, "Simulation bridge initialised");
+  Napi::Object ts_ui_settings { ts_config.Get("uiSettings").As<Napi::Object>() };
+  int gui { ts_ui_settings.Get("gui").As<Napi::Number>().Int32Value() };
+  UISettings ui_settings { gui };
+  
+  return Config {settings, bodies, ui_settings};
 }
 
+Napi::Value start_sim(const Napi::CallbackInfo& info) {
+  Napi::Env env { info.Env() };
+
+  Napi::Object ts_config { info[0].As<Napi::Object>() };
+  Config conf { ts_to_conf(ts_config) };
+
+  auto runtime_thread {
+    std::thread([conf]() {
+
+      int exit_code {sim_entry(conf)};
+      if (exit_code != 0) {
+        std::cout << exit_code;
+      };
+    })
+  };
+
+  runtime_thread.detach();
+  return Napi::String::New(env, "Simulation bridge initialised");
+}
 
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
     exports.Set(Napi::String::New(env, "start"), 
