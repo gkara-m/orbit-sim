@@ -34,7 +34,7 @@ Config ts_to_conf(const Napi::Object& ts_config) {
     for (int j {0}; j < velocity_array.Length(); ++j) {
       velocities.push_back(velocity_array.Get(j).As<Napi::Number>());
     };
-    Napi::Array acceleration_array {ts_body.Get("velocity").As<Napi::Array>()};
+    Napi::Array acceleration_array {ts_body.Get("acceleration").As<Napi::Array>()};
     for (int j {0}; j < acceleration_array.Length(); ++j) {
       accelerations.push_back(acceleration_array.Get(j).As<Napi::Number>());
     };
