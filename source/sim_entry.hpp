@@ -1,3 +1,4 @@
 #pragma once
 
-int sim_entry();
+#include "types.hpp"
+int sim_entry(Config& conf);

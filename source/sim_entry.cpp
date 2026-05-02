@@ -1,7 +1,7 @@
 #include <nlohmann/json.hpp>
 
 #include "physics.hpp"
-#include "types.hpp"
+#include "sim_entry.hpp"
 
 #include <fstream>
 #include <iostream>
@@ -42,11 +42,11 @@ auto start_ui_communicator_thread(const Config conf) {
   comm_thread.detach();
 }; // TODO
 
-auto sim_entry() -> int {
-  Config conf { startup() };
+auto sim_entry(Config& conf) -> int {
+  // Config conf { startup() };
   std::cout << "Loaded config.json" << "\n";
   
-  start_ui_communicator_thread(conf);
+  // start_ui_communicator_thread(conf);
   
   std::cout << "Initial Positions: ";
   for (Body& body: conf.bodies) {
