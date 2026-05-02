@@ -1,4 +1,5 @@
 #pragma once
 
 #include "types.hpp"
-int sim_entry(Config conf);
+#include <memory>
+int sim_entry(std::shared_ptr<SharedState> shared, Settings settings);

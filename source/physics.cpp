@@ -1,7 +1,6 @@
 #include "physics.hpp"
 
 #include <cstddef>
-#include <vector>
 #include <cmath>
 
 void vv_update_pos(double& pos, const double vel, const double acc, const double dt) {

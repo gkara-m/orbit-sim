@@ -1,14 +1,9 @@
 #pragma once
 
+#include <shared_mutex>
 #include <vector>
 
-// struct Body {
-//   int id {};
-//   double mass {};
-//   std::array<double, 2> position {};
-//   std::array<double, 2> velocity {};
-//   std::array<double, 2> acceleration {};
-// };
+// internal logic structs
 struct Physics {
   double g {};
   double dt {};
@@ -27,4 +22,10 @@ struct State {
 struct Config {
   State state {};
   Settings settings {};
+};
+
+// ui interfacing structs
+struct SharedState {
+  std::shared_mutex mutex {};
+  State state {};
 };

@@ -1,8 +1,14 @@
+#include <cstddef>
 #include <iostream>
+#include <mutex>
 #include <napi.h>
+#include <shared_mutex>
 #include <thread>
-#include <vector>
+#include <memory>
+#include <utility>
 #include "sim_entry.hpp"
+
+std::shared_ptr<SharedState> globalData {std::make_shared<SharedState>()};
 
 Config ts_to_conf(const Napi::Object& ts_config) {
 
@@ -45,18 +51,52 @@ Config ts_to_conf(const Napi::Object& ts_config) {
   return Config { state, settings };
 }
 
+Napi::Value get_buffer(const Napi::CallbackInfo& info) {
+  Napi::Env env { info.Env() };
+  std::shared_lock lock(globalData->mutex);
+
+  Napi::Object buffers {Napi::Object::New(env)};
+
+  auto create_view_vec {[&](std::vector<double>& vec) {
+    if (vec.empty()) return Napi::Float64Array();
+    size_t byte_length {vec.size() * sizeof(double)};
+    Napi::ArrayBuffer buffer {Napi::ArrayBuffer::New(env, vec.data(), byte_length)};
+    return Napi::Float64Array::New(env, vec.size(), buffer, 0);
+  }};
+
+  auto create_view_float {[&](double& num) {
+    size_t byte_length {sizeof(double)};
+    Napi::ArrayBuffer buffer {Napi::ArrayBuffer::New(env, &num, byte_length)};
+    return Napi::Float64Array::New(env, 1, buffer, 0);
+  }};
+
+  buffers.Set("positions", create_view_vec(globalData->state.positions));
+  buffers.Set("velocities", create_view_vec(globalData->state.velocities));
+  buffers.Set("accelerations", create_view_vec(globalData->state.accelerations));
+  buffers.Set("g", create_view_float(globalData->state.physics.g));
+  buffers.Set("dt", create_view_float(globalData->state.physics.dt));
+
+  return buffers;
+};
+
 Napi::Value start_sim(const Napi::CallbackInfo& info) {
   Napi::Env env { info.Env() };
-
   Napi::Object ts_config { info[0].As<Napi::Object>() };
-  Config conf { ts_to_conf(ts_config) };
+
+
+  Config temp_conf { ts_to_conf(ts_config) };
+
+  {
+    std::unique_lock lock(globalData->mutex);
+    globalData->state = std::move(temp_conf.state);
+  }
 
   auto runtime_thread {
-    std::thread([conf]() {
+    std::thread([temp_conf]() {
 
-      int exit_code {sim_entry(conf)};
+      int exit_code {sim_entry(globalData, temp_conf.settings)};
       if (exit_code != 0) {
-        std::cout << exit_code;
+        std::cerr << exit_code;
       };
     })
   };
@@ -66,9 +106,10 @@ Napi::Value start_sim(const Napi::CallbackInfo& info) {
 }
 
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
-    exports.Set(Napi::String::New(env, "start"), 
-                Napi::Function::New(env, start_sim));
-    return exports;
+  exports.Set(Napi::String::New(env, "start"), Napi::Function::New(env, start_sim));
+  exports.Set(Napi::String::New(env, "getBuffer"), Napi::Function::New(env, get_buffer));
+  return exports;
 }
 
-NODE_API_MODULE(orbit_sim, Init)
+NODE_API_MODULE(orbit_sim, Init);
+
