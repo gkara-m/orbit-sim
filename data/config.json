@@ -20,7 +20,7 @@
       "acceleration": [0.0, 0.0]
     }
   ],
-  "ui-settings": {
-    "gui": 0
+  "uiSettings": {
+    "gui": 1
   }
 }
