@@ -1,17 +1,12 @@
-#include <cstddef>
-#include <iostream>
-#include <mutex>
 #include <napi.h>
-#include <shared_mutex>
 #include <thread>
-#include <memory>
-#include <utility>
 #include "sim_entry.hpp"
 
 std::shared_ptr<SharedState> globalData {std::make_shared<SharedState>()};
 
 Config ts_to_conf(const Napi::Object& ts_config) {
 
+  // parse received from typescript
   Napi::Object ts_settings { ts_config.Get("settings").As<Napi::Object>() };
   int gui { ts_settings.Get("gui").As<Napi::Number>().Int32Value() };
   bool use_steps { ts_settings.Get("useSteps").As<Napi::Boolean>() };
@@ -23,7 +18,7 @@ Config ts_to_conf(const Napi::Object& ts_config) {
   double dt { ts_physics.Get("dt").As<Napi::Number>() };
   Physics physics {g, dt};
   
-  // Parse every body and push parsed to vector
+  // parse every body and push parsed to vector
   Napi::Array ts_bodies { ts_config.Get("bodies").As<Napi::Array>() };
   std::vector<double> masses {};
   std::vector<double> positions {};
@@ -52,8 +47,6 @@ Config ts_to_conf(const Napi::Object& ts_config) {
 
 Napi::Value get_buffer(const Napi::CallbackInfo& info) {
   Napi::Env env { info.Env() };
-  std::shared_lock lock(globalData->mutex);
-
   Napi::Object buffers {Napi::Object::New(env)};
 
   auto create_view_vec {[&](std::vector<double>& vec) {
@@ -69,42 +62,43 @@ Napi::Value get_buffer(const Napi::CallbackInfo& info) {
     return Napi::Float64Array::New(env, 1, buffer, 0);
   }};
 
+  auto create_view_bool {[&](bool& boolean) {
+    size_t byte_length {sizeof(bool)};
+    Napi::ArrayBuffer buffer {Napi::ArrayBuffer::New(env, &boolean, byte_length)};
+    return Napi::Uint8Array::New(env, 1, buffer, 0);
+  }};
+
   buffers.Set("positions", create_view_vec(globalData->state.positions));
   buffers.Set("velocities", create_view_vec(globalData->state.velocities));
   buffers.Set("accelerations", create_view_vec(globalData->state.accelerations));
   buffers.Set("g", create_view_float(globalData->state.physics.g));
   buffers.Set("dt", create_view_float(globalData->state.physics.dt));
 
+  buffers.Set("keepRunning", create_view_bool(globalData->keep_running));
+
   return buffers;
 };
 
 Napi::Value start_sim(const Napi::CallbackInfo& info) {
   Napi::Env env { info.Env() };
+
+  // receive startup info from typescript
   Napi::Object ts_config { info[0].As<Napi::Object>() };
-
-
   Config temp_conf { ts_to_conf(ts_config) };
-
-  {
-    std::unique_lock lock(globalData->mutex);
-    globalData->state = std::move(temp_conf.state);
-  }
+  globalData->state = std::move(temp_conf.state);
 
   // spin off main simulation thread
   auto runtime_thread {
     std::thread([temp_conf]() {
-
-      int exit_code {sim_entry(globalData, temp_conf.settings)};
-      if (exit_code != 0) {
-        std::cerr << exit_code;
-      }; // TODO better error handling
+      sim_entry(globalData, temp_conf.settings);
     })
   };
-
   runtime_thread.detach();
-  return Napi::String::New(env, "Simulation bridge initialised");
+
+  return Napi::Number::New(env, 0);
 }
 
+// functions available from typescript
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
   exports.Set(Napi::String::New(env, "start"), Napi::Function::New(env, start_sim));
   exports.Set(Napi::String::New(env, "getBuffer"), Napi::Function::New(env, get_buffer));

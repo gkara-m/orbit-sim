@@ -1,6 +1,5 @@
 #pragma once
 
-#include <shared_mutex>
 #include <vector>
 
 // internal logic structs
@@ -27,6 +26,6 @@ struct Config {
 
 // ui interfacing structs
 struct SharedState {
-  std::shared_mutex mutex {};
   State state {};
+  bool keep_running {true};
 };
