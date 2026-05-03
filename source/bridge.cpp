@@ -17,7 +17,6 @@ Config ts_to_conf(const Napi::Object& ts_config) {
   int steps { ts_settings.Get("steps").As<Napi::Number>().Int32Value() };
   Settings settings { gui, steps };
 
-
   Napi::Object ts_physics { ts_config.Get("physics").As<Napi::Object>() };
   double g { ts_physics.Get("g").As<Napi::Number>() };
   double dt { ts_physics.Get("dt").As<Napi::Number>() };
@@ -45,7 +44,6 @@ Config ts_to_conf(const Napi::Object& ts_config) {
       accelerations.push_back(acceleration_array.Get(j).As<Napi::Number>());
     };
   };
-  
   State state { physics, masses, positions, velocities, accelerations };
   
   return Config { state, settings };
@@ -91,13 +89,14 @@ Napi::Value start_sim(const Napi::CallbackInfo& info) {
     globalData->state = std::move(temp_conf.state);
   }
 
+  // spin off main simulation thread
   auto runtime_thread {
     std::thread([temp_conf]() {
 
       int exit_code {sim_entry(globalData, temp_conf.settings)};
       if (exit_code != 0) {
         std::cerr << exit_code;
-      };
+      }; // TODO better error handling
     })
   };
 
@@ -112,4 +111,3 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
 }
 
 NODE_API_MODULE(orbit_sim, Init);
-
