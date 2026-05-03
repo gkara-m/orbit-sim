@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <array>
 
 // internal logic structs
 struct Physics {
@@ -20,6 +21,7 @@ struct State {
   std::vector<double> positions {};
   std::vector<double> velocities {};
   std::vector<double> accelerations {};
+  std::array<double, 4> system_dimensions {}; // 0 = width, 1 = height, [3,4] = [centre_x, centre_y]
 };
 struct Config {
   State state {};

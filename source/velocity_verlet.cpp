@@ -1,5 +1,6 @@
 #include "velocity_verlet.hpp"
 
+#include <algorithm>
 #include <cmath>
 
 void vv_update_pos(double& pos, const double vel, const double acc, const double dt) {
@@ -27,7 +28,24 @@ void acceleration_brute_force(const State& state, const int i, const int j, doub
   acc_y += force_scalar * (dy / dist);
 }
 
+void barnes_hut(State& state, const size_t num_bodies) {
+  double min_x {state.positions[0]};
+  double min_y {state.positions[1]};
+  double max_x {state.positions[0]};
+  double max_y {state.positions[1]};
 
+  for (int i {1}; i < num_bodies; ++i) {
+    if (state.positions[2*i] < min_x) min_x = state.positions[2*i];
+    if (state.positions[2*i + 1] < min_y) min_y = state.positions[2*i + 1];
+    if (state.positions[2*i] > max_x) max_x = state.positions[2*i];
+    if (state.positions[2*i + 1] > max_y) max_y = state.positions[2*i + 1];
+  } // TODO
+  
+  double width { max_x - min_x };
+  double height { max_y - min_y };
+  double size { std::max(width, height) * 1.05 };
+  state.system_dimensions = { width, height, (min_x + max_x) / 2, (min_y + max_y) / 2 };
+};
 
 void velocity_verlet(State& state, const int algorithm, const size_t num_bodies) {
   if (algorithm != 0) return; // TODO
@@ -37,6 +55,8 @@ void velocity_verlet(State& state, const int algorithm, const size_t num_bodies)
   for (size_t i {0}; i < num_bodies * 2; ++i) {
     vv_update_pos(state.positions[i], state.velocities[i], state.accelerations[i], dt);
   };
+
+  barnes_hut(state, num_bodies);
 
   // loop across each body to update vel and acc
   for (size_t i {0}; i < num_bodies; ++i) {

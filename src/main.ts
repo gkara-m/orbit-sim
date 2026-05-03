@@ -35,11 +35,13 @@ interface Config {
   settings: Settings;
 }
 
-function raylibInit(worldSize: [number, number]) {
+function raylibInit() {
   r.SetConfigFlags(r.FLAG_WINDOW_RESIZABLE);
   r.InitWindow(800, 600, "Orbit Sim");
   r.ToggleFullscreen();
   r.SetTargetFPS(60);
+
+  let worldSize = getWorldSize();
 
   const zoomX = r.GetScreenWidth() / worldSize[0];
   const zoomY = r.GetScreenHeight() / worldSize[1];
@@ -55,10 +57,12 @@ function raylibInit(worldSize: [number, number]) {
   return camera;
 }
 
-function runRaylibGUI(worldSize: [number, number]) {
-  const camera = raylibInit(worldSize);
+function runRaylibGUI() {
+  let camera = raylibInit();
   const numBodies = data.bodies.length;
   while (r.WindowShouldClose() == false) {
+    camera.target.x = views.dimensions[2];
+    camera.target.y = views.dimensions[3];
     r.BeginDrawing();
     r.ClearBackground(bgColour);
     
@@ -74,31 +78,21 @@ function runRaylibGUI(worldSize: [number, number]) {
   r.CloseWindow();
 }
 
-function getWorldSize(gui: number) {
-  const size: [number, number] = [0,0];
-  if (gui == 0) return size;
-  for (const body of data.bodies) {
-    if (Math.abs(body.position[0]) > size[0]) {
-      size[0] = Math.abs(body.position[0]) * 2.1
-    };
-    if (Math.abs(body.position[1]) > size[1]) {
-      size[1] = Math.abs(body.position[1]) * 2.1
-    };
-  };
+function getWorldSize() {
+  const size: [number, number] = [views.dimensions[0] * 1.1, views.dimensions[0] * 1.1];
   return size;
 }
 
 const jsonString = fs.readFileSync(confPath, "utf8");
 const data: Config = JSON.parse(jsonString);
 
-const worldSize = getWorldSize(data.settings.gui)
 
 const require = createRequire(import.meta.url)
 const orbitSim = require(orbitSimPath);
 orbitSim.start(data);
-// Available views: g, dt, positions, velocities, accelerations
+// Available views: g, dt, positions, velocities, accelerations, dimensions
 const views = orbitSim.getBuffer();
 
 if (data.settings.gui == 1) {
-  runRaylibGUI(worldSize);
+  runRaylibGUI();
 };

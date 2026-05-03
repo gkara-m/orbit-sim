@@ -42,7 +42,12 @@ Config ts_to_conf(const Napi::Object& ts_config) {
       accelerations.push_back(acceleration_array.Get(j).As<Napi::Number>());
     };
   };
-  State state { physics, masses, positions, velocities, accelerations };
+
+  // TODO
+  double width {0};
+  double height {0};
+
+  State state { physics, masses, positions, velocities, accelerations, width, height };
   
   return Config { state, settings };
 }
@@ -56,6 +61,13 @@ Napi::Value get_buffer(const Napi::CallbackInfo& info) {
     size_t byte_length {vec.size() * sizeof(double)};
     Napi::ArrayBuffer buffer {Napi::ArrayBuffer::New(env, vec.data(), byte_length)};
     return Napi::Float64Array::New(env, vec.size(), buffer, 0);
+  }};
+
+  auto create_view_arr4 {[&](std::array<double, 4>& arr) {
+    if (arr.empty()) return Napi::Float64Array();
+    size_t byte_length {arr.size() * sizeof(double)};
+    Napi::ArrayBuffer buffer {Napi::ArrayBuffer::New(env, arr.data(), byte_length)};
+    return Napi::Float64Array::New(env, arr.size(), buffer, 0);
   }};
 
   auto create_view_float {[&](double& num) {
@@ -75,6 +87,7 @@ Napi::Value get_buffer(const Napi::CallbackInfo& info) {
   buffers.Set("accelerations", create_view_vec(globalData->state.accelerations));
   buffers.Set("g", create_view_float(globalData->state.physics.g));
   buffers.Set("dt", create_view_float(globalData->state.physics.dt));
+  buffers.Set("dimensions", create_view_arr4(globalData->state.system_dimensions));
 
   buffers.Set("keepRunning", create_view_bool(globalData->keep_running));
 
