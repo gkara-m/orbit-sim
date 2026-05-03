@@ -17,7 +17,7 @@ string(REPLACE "\"" "" NODE_ADDON_API_DIR ${NODE_ADDON_API_DIR})
 add_library(${PROJECT_NAME} MODULE
   source/bridge.cpp
   source/sim_entry.cpp
-  source/physics.cpp
+  source/velocity_verlet.cpp
 )
 
 # treat as SYSTEM headers to remove 3rd party warnings

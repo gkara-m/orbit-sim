@@ -11,13 +11,15 @@ struct Settings {
   int gui {};
   bool use_steps {};
   int steps {};
+  int integrator {};
+  int algorithm {};
 };
 struct State {
   Physics physics {};
-  std::vector<double> masses;
-  std::vector<double> positions;
-  std::vector<double> velocities;
-  std::vector<double> accelerations;
+  std::vector<double> masses {};
+  std::vector<double> positions {};
+  std::vector<double> velocities {};
+  std::vector<double> accelerations {};
 };
 struct Config {
   State state {};

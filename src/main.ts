@@ -16,7 +16,9 @@ interface Physics {
 interface Settings {
   useSteps: boolean;
   steps: number;
-  gui: number; // 0 = CLI, 1 = GUI
+  gui: number; // 0 = CLI (TODO), 1 = GUI 
+  integrator: number; // 0 = Velocity Verlet, 1... to be added?
+  algorithm: number; // 0 = Brute Force O(n^2), 1 = Barnes Hut O(nlogn) (TODO)
 }
 
 interface Body {

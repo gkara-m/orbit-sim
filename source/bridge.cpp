@@ -11,7 +11,9 @@ Config ts_to_conf(const Napi::Object& ts_config) {
   int gui { ts_settings.Get("gui").As<Napi::Number>().Int32Value() };
   bool use_steps { ts_settings.Get("useSteps").As<Napi::Boolean>() };
   int steps { ts_settings.Get("steps").As<Napi::Number>().Int32Value() };
-  Settings settings { gui, use_steps, steps };
+  int integrator { ts_settings.Get("integrator").As<Napi::Number>().Int32Value() };
+  int algorithm { ts_settings.Get("algorithm").As<Napi::Number>().Int32Value() };
+  Settings settings { gui, use_steps, steps, integrator, algorithm };
 
   Napi::Object ts_physics { ts_config.Get("physics").As<Napi::Object>() };
   double g { ts_physics.Get("g").As<Napi::Number>() };
