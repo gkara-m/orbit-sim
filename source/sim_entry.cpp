@@ -1,45 +1,37 @@
 #include "physics.hpp"
 
-#include <iostream>
+#include <cstddef>
 #include <memory>
 #include <mutex>
 #include <shared_mutex>
 #include <thread>
 #include <vector>
 
+auto sim_loop(std::shared_ptr<SharedState> shared_state, size_t num_bodies) {
+  // run the physics sim loop with a unique lock
+  {
+    std::unique_lock lock(shared_state->mutex);
+    velocity_verlet(shared_state->state, num_bodies);
+  };
+
+  std::this_thread::yield();
+}
 
 auto sim_entry(std::shared_ptr<SharedState> shared_state, Settings settings) -> int {
-  std::cout << "Loaded config.json" << "\n";
-
-
-  std::cout << "Initial Positions: ";
   size_t num_bodies {0};
+  // lock shared_state to read num_bodies
   {
     std::shared_lock lock(shared_state->mutex);
     num_bodies += shared_state->state.masses.size();
-    for (size_t i {0}; i < num_bodies; ++i) {
-      std::shared_lock lock(shared_state->mutex);
-      std::vector<double> positions {shared_state->state.positions};
-      std::cout << "[" << positions[2*i] << "," << positions[2*i+1] << "] ";
-    };
+  };
+
+  if (settings.use_steps == false) {
+    while (true) {
+      sim_loop(shared_state, num_bodies);
+    }
   }
-
   for (int i = 0; i < settings.steps; i++) {
-    {
-      std::unique_lock lock(shared_state->mutex);
-      velocity_verlet(shared_state->state, num_bodies);
-    };
-
-    {
-      std::shared_lock lock(shared_state->mutex);
-      std::vector<double> positions {shared_state->state.positions};
-      for (size_t i {0}; i < num_bodies; ++i) {
-        std::cout << "[" << positions[2*i] << "," << positions[2*i+1] << "] ";
-      };
-    };
-    std::cout << "\n";
-
-    std::this_thread::yield();
+    sim_loop(shared_state, num_bodies);
   }
 
   return 0;

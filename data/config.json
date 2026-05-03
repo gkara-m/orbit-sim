@@ -21,6 +21,7 @@
   ],
   "settings": {
     "gui": 1,
+    "useSteps": false,
     "steps": 2.4e8
   }
 }

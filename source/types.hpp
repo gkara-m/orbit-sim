@@ -10,6 +10,7 @@ struct Physics {
 };
 struct Settings {
   int gui {};
+  bool use_steps {};
   int steps {};
 };
 struct State {

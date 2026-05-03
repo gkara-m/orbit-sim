@@ -14,6 +14,7 @@ interface Physics {
 }
 
 interface Settings {
+  useSteps: boolean;
   steps: number;
   gui: number; // 0 = CLI, 1 = GUI
 }
@@ -43,7 +44,7 @@ function raylibInit(worldSize: [number, number]) {
   const finalZoom = Math.min(zoomX, zoomY);
 
   const camera: r.Camera2D = {
-    offset: { x: r.GetScreenWidth() / 2, y: r.GetScreenHeight() / 2 },
+    offset: { x: r.GetScreenWidth(), y: r.GetScreenHeight()},
     target: { x: 0, y: 0 },
     rotation: 0,
     zoom: finalZoom

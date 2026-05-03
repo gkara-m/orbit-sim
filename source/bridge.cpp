@@ -14,8 +14,9 @@ Config ts_to_conf(const Napi::Object& ts_config) {
 
   Napi::Object ts_settings { ts_config.Get("settings").As<Napi::Object>() };
   int gui { ts_settings.Get("gui").As<Napi::Number>().Int32Value() };
+  bool use_steps { ts_settings.Get("useSteps").As<Napi::Boolean>() };
   int steps { ts_settings.Get("steps").As<Napi::Number>().Int32Value() };
-  Settings settings { gui, steps };
+  Settings settings { gui, use_steps, steps };
 
   Napi::Object ts_physics { ts_config.Get("physics").As<Napi::Object>() };
   double g { ts_physics.Get("g").As<Napi::Number>() };
