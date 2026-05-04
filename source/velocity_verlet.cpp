@@ -45,8 +45,8 @@ struct Node {
   bool divided {false};
 
   double mass {0};
-  double com_x {};
-  double com_y {};
+  double com_x {0};
+  double com_y {0};
 
   Node(Area b) : boundary(b) {};
   ~Node() {
@@ -104,6 +104,37 @@ struct Node {
     
     return;
   }
+
+  void update_mass(std::vector<double>& positions, std::vector<double>& masses) {
+    mass = 0;
+    com_x = 0;
+    com_y = 0;
+
+    // case: leaf (full)
+    if (!divided) {
+      if (body_index != -1) {
+        mass = masses[body_index];
+        com_x = positions[2*body_index];
+        com_y = positions[2*body_index + 1];
+      }
+      return;
+    }
+    
+    // case: node
+    for (int i {0}; i < 4; ++i) {
+      if (children[i]) {
+        children[i]->update_mass(positions, masses);
+        mass += children[i]->mass;
+        com_x += children[i]->com_x * children[i]->mass;
+        com_y += children[i]->com_y * children[i]->mass;
+      }
+    }
+
+    if (mass > 0) {
+      com_x /= mass;
+      com_y /= mass;
+    }
+  }
 };
 
 void barnes_hut(State& state, const size_t num_bodies) {
@@ -126,12 +157,15 @@ void barnes_hut(State& state, const size_t num_bodies) {
   double size { std::max(width, height) * 1.05};
 
   // construct quadtree (TODO implement barnes hut)
-  Node* root_node = new Node {Area {state.system_dimensions[2], state.system_dimensions[3], size / 2}};
+  Node* root = new Node {Area {state.system_dimensions[2], state.system_dimensions[3], size / 2}};
   for (int i {0}; i < num_bodies; ++i) {
-    root_node->insert(state.positions, i);
+    root->insert(state.positions, i);
   }
 
-  delete root_node;
+  // run barnes hut calculations on the quadtree
+  root->update_mass(state.positions, state.masses);
+
+  delete root;
 };
 
 void velocity_verlet(State& state, const int algorithm, const size_t num_bodies) {

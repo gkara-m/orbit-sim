@@ -1,7 +1,7 @@
 {
   "physics": {
     "g": 6.6743e-11,
-    "dt": 0.01
+    "dt": 0.1
   },
   "bodies": [
     {
@@ -24,6 +24,7 @@
     "useSteps": false,
     "steps": 2.4e8,
     "integrator": 0,
-    "algorithm": 0
+    "algorithm": 0,
+    "thetaBarnesHut": 0.5
   }
 }

@@ -13,7 +13,8 @@ Config ts_to_conf(const Napi::Object& ts_config) {
   int steps { ts_settings.Get("steps").As<Napi::Number>().Int32Value() };
   int integrator { ts_settings.Get("integrator").As<Napi::Number>().Int32Value() };
   int algorithm { ts_settings.Get("algorithm").As<Napi::Number>().Int32Value() };
-  Settings settings { gui, use_steps, steps, integrator, algorithm };
+  double bh_theta { ts_settings.Get("thetaBarnesHut").As<Napi::Number>() };
+  Settings settings { gui, use_steps, steps, integrator, algorithm, bh_theta };
 
   Napi::Object ts_physics { ts_config.Get("physics").As<Napi::Object>() };
   double g { ts_physics.Get("g").As<Napi::Number>() };

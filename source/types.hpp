@@ -14,6 +14,7 @@ struct Settings {
   int steps {};
   int integrator {};
   int algorithm {};
+  double bh_theta {};
 };
 struct State {
   Physics physics {};
