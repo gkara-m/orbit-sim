@@ -1,6 +1,5 @@
 #include "velocity_verlet.hpp"
 
-#include <algorithm>
 #include <cmath>
 
 void vv_update_pos(double& pos, const double vel, const double acc, const double dt) {
@@ -28,23 +27,111 @@ void acceleration_brute_force(const State& state, const int i, const int j, doub
   acc_y += force_scalar * (dy / dist);
 }
 
-void barnes_hut(State& state, const size_t num_bodies) {
-  double min_x {state.positions[0]};
-  double min_y {state.positions[1]};
-  double max_x {state.positions[0]};
-  double max_y {state.positions[1]};
+struct Area {
+  double centre_x {};
+  double centre_y {};
+  double size {};
 
+  bool contains(const double x, const double y) {
+    if (x >= centre_x - size && x <= centre_x + size && y >= centre_y - size && y <= centre_y + size) return true;
+    return false;
+  }
+};
+
+struct Node {
+  Area boundary {};
+  int body_index {-1}; // -1 => leaf
+  Node* children[4] {nullptr};
+  bool divided {false};
+
+  double mass {0};
+  double com_x {};
+  double com_y {};
+
+  Node(Area b) : boundary(b) {};
+  ~Node() {
+    for (int i {0}; i < 4; ++i) {
+      if (children[i] != nullptr) {
+        delete children[i];
+      }
+    }
+  }
+
+  void subdivide() {
+    double parent_x {boundary.centre_x};
+    double parent_y {boundary.centre_y};
+    double child_size { boundary.size / 2 };
+
+    children[0] = new Node {Area {parent_x + child_size, parent_y + child_size, child_size}};
+    children[1] = new Node {Area {parent_x - child_size, parent_y + child_size, child_size}};
+    children[2] = new Node {Area {parent_x - child_size, parent_y - child_size, child_size}};
+    children[3] = new Node {Area {parent_x + child_size, parent_y - child_size, child_size}};
+    
+    divided = true;
+    return;
+  }
+
+  void insert(std::vector<double>& positions, int index, int depth = 0) {
+    if (depth > 20) return;
+    if (!boundary.contains(positions[2*index], positions[2*index + 1])) return;
+
+    // case: empty leaf
+    if (!divided && body_index == -1) {
+      body_index = index;
+      return;
+    }
+
+    // case: leaf (full) -> branch
+    // divide, turn current leaf into branch, pass down current index to next leaf
+    if (!divided) {
+      subdivide();
+
+      int old_index {body_index};
+      body_index = -1;
+
+      if (old_index != -1) {
+        for (int i {0}; i < 4; ++i) {
+          children[i]->insert(positions, old_index, depth + 1);
+        }
+      }
+    }
+
+    // case: branch (previous cases return or resolve into branch)
+    // pass down new index
+    for (int i = 0; i < 4; ++i) {
+      children[i]->insert(positions, index, depth + 1);
+    }
+    
+    return;
+  }
+};
+
+void barnes_hut(State& state, const size_t num_bodies) {
+  double max_x {state.positions[0]};
+  double min_x {state.positions[0]};
+  double max_y {state.positions[1]};
+  double min_y {state.positions[1]};
+
+  // get system dimensions
   for (int i {1}; i < num_bodies; ++i) {
-    if (state.positions[2*i] < min_x) min_x = state.positions[2*i];
-    if (state.positions[2*i + 1] < min_y) min_y = state.positions[2*i + 1];
     if (state.positions[2*i] > max_x) max_x = state.positions[2*i];
+    if (state.positions[2*i] < min_x) min_x = state.positions[2*i];
     if (state.positions[2*i + 1] > max_y) max_y = state.positions[2*i + 1];
+    if (state.positions[2*i + 1] < min_y) min_y = state.positions[2*i + 1];
   } // TODO
   
   double width { max_x - min_x };
   double height { max_y - min_y };
-  double size { std::max(width, height) * 1.05 };
   state.system_dimensions = { width, height, (min_x + max_x) / 2, (min_y + max_y) / 2 };
+  double size { std::max(width, height) * 1.05};
+
+  // construct quadtree (TODO implement barnes hut)
+  Node* root_node = new Node {Area {state.system_dimensions[2], state.system_dimensions[3], size / 2}};
+  for (int i {0}; i < num_bodies; ++i) {
+    root_node->insert(state.positions, i);
+  }
+
+  delete root_node;
 };
 
 void velocity_verlet(State& state, const int algorithm, const size_t num_bodies) {

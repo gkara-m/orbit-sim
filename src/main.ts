@@ -1,3 +1,5 @@
+console.log("started orbit_sim")
+
 import fs from "fs";
 import { createRequire } from "module";
 import r from "raylib";
@@ -85,14 +87,19 @@ function getWorldSize() {
 
 const jsonString = fs.readFileSync(confPath, "utf8");
 const data: Config = JSON.parse(jsonString);
-
+console.log("parsed json")
 
 const require = createRequire(import.meta.url)
 const orbitSim = require(orbitSimPath);
+
+console.log("starting...")
 orbitSim.start(data);
 // Available views: g, dt, positions, velocities, accelerations, dimensions
 const views = orbitSim.getBuffer();
+console.log("simulation started")
 
 if (data.settings.gui == 1) {
   runRaylibGUI();
 };
+
+console.log("shutting down sim");
