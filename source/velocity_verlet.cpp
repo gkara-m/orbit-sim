@@ -1,6 +1,7 @@
 #include "velocity_verlet.hpp"
 
 #include <cmath>
+#include <vector>
 
 void vv_update_pos(double& pos, const double vel, const double acc, const double dt) {
   pos += (vel * dt + acc * dt * dt / 2);
@@ -135,9 +136,31 @@ struct Node {
       com_y /= mass;
     }
   }
+
+  void get_new_acceleration(const State& state, const int index, const double bh_theta, double& acc_x_sum, double& acc_y_sum) {
+    if (index == body_index || mass == 0) return;
+    
+    double dx {com_x - state.positions[2*index]};
+    double dy {com_y - state.positions[2*index + 1]};
+    double dist_sq {dx * dx + dy * dy};
+
+    double s {boundary.size * 2};
+    if (!divided || s * s / dist_sq < bh_theta * bh_theta) {
+      double dist {std::sqrt(dist_sq)};
+      double force_scalar {state.physics.g * mass / dist_sq};
+      acc_x_sum += force_scalar * dx / dist;
+      acc_y_sum += force_scalar * dy / dist;
+    } else {
+      for (int i {0}; i < 4; ++i) {
+        if (children[i]) {
+          children[i]->get_new_acceleration(state, index, bh_theta, acc_x_sum, acc_y_sum);
+        }
+      }
+    }
+  }
 };
 
-void barnes_hut(State& state, const size_t num_bodies) {
+void barnes_hut(State& state, const size_t num_bodies, const double bh_theta) {
   double max_x {state.positions[0]};
   double min_x {state.positions[0]};
   double max_y {state.positions[1]};
@@ -156,19 +179,32 @@ void barnes_hut(State& state, const size_t num_bodies) {
   state.system_dimensions = { width, height, (min_x + max_x) / 2, (min_y + max_y) / 2 };
   double size { std::max(width, height) * 1.05};
 
-  // construct quadtree (TODO implement barnes hut)
+  // construct quadtree
   Node* root = new Node {Area {state.system_dimensions[2], state.system_dimensions[3], size / 2}};
   for (int i {0}; i < num_bodies; ++i) {
     root->insert(state.positions, i);
   }
 
-  // run barnes hut calculations on the quadtree
+  // run barnes hut calculations on the quadtree, finish velocity verlet integration
   root->update_mass(state.positions, state.masses);
+  for (int i {0}; i < num_bodies; ++i) {
+    // get new acceleration for each body
+    double acc_x_sum {0};
+    double acc_y_sum {0};
+    root->get_new_acceleration(state, i, bh_theta, acc_x_sum, acc_y_sum);
+
+    // use new acceleration to calculate new positions
+    vv_update_vel(state.velocities[2*i], state.accelerations[2*i], acc_x_sum, state.physics.dt);
+    vv_update_vel(state.velocities[2*i + 1], state.accelerations[2*i + 1], acc_y_sum, state.physics.dt);
+
+    state.accelerations[i * 2] = acc_x_sum;
+    state.accelerations[i * 2 + 1] = acc_y_sum;
+  }
 
   delete root;
 };
 
-void velocity_verlet(State& state, const int algorithm, const size_t num_bodies) {
+void velocity_verlet(State& state, const int algorithm, const size_t num_bodies, const double bh_theta) {
   if (algorithm != 0) return; // TODO
   double dt {state.physics.dt};
 
@@ -177,23 +213,23 @@ void velocity_verlet(State& state, const int algorithm, const size_t num_bodies)
     vv_update_pos(state.positions[i], state.velocities[i], state.accelerations[i], dt);
   };
 
-  barnes_hut(state, num_bodies);
+  barnes_hut(state, num_bodies, bh_theta);
 
   // loop across each body to update vel and acc
-  for (size_t i {0}; i < num_bodies; ++i) {
-    double acc_x_new {0};
-    double acc_y_new {0};
-
-    // sum acceleration on i from each body, add to existing acc
-    for (size_t j {0}; j < num_bodies; ++j) {
-      acceleration_brute_force(state, i, j, acc_x_new, acc_y_new);
-    };
-    
-    vv_update_vel(state.velocities[2*i], state.accelerations[2*i], acc_x_new, dt);
-    vv_update_vel(state.velocities[2*i + 1], state.accelerations[2*i + 1], acc_y_new, dt);
-    state.accelerations[i * 2] = acc_x_new;
-    state.accelerations[i * 2 + 1] = acc_y_new;
-  };
+  // for (size_t i {0}; i < num_bodies; ++i) {
+  //   double acc_x_new {0};
+  //   double acc_y_new {0};
+  //
+  //   // sum acceleration on i from each body, add to existing acc
+  //   for (size_t j {0}; j < num_bodies; ++j) {
+  //     acceleration_brute_force(state, i, j, acc_x_new, acc_y_new);
+  //   };
+  //
+  //   vv_update_vel(state.velocities[2*i], state.accelerations[2*i], acc_x_new, dt);
+  //   vv_update_vel(state.velocities[2*i + 1], state.accelerations[2*i + 1], acc_y_new, dt);
+  //   state.accelerations[i * 2] = acc_x_new;
+  //   state.accelerations[i * 2 + 1] = acc_y_new;
+  // };
 
   return;
 }

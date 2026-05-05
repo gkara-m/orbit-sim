@@ -8,12 +8,12 @@ auto sim_entry(std::shared_ptr<SharedState> shared_state, Settings settings) -> 
 
   if (settings.use_steps == false) {
     while (shared_state->keep_running) {
-      velocity_verlet(shared_state->state, settings.algorithm ,num_bodies);
+      velocity_verlet(shared_state->state, settings.algorithm ,num_bodies, settings.bh_theta);
     };
     return 0;
 
   } else {for (int i {0}; i < settings.steps; i++) {
-      velocity_verlet(shared_state->state, settings.algorithm, num_bodies);
+      velocity_verlet(shared_state->state, settings.algorithm, num_bodies, settings.bh_theta);
     };
     return 0;
 
