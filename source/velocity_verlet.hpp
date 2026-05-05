@@ -2,4 +2,5 @@
 
 #include "types.hpp"
 
-void velocity_verlet(State& state, const int algorithm, const size_t num_bodies, const double bh_theta);
+void vv_brute_force(State& state, const size_t num_bodies);
+void vv_barnes_hut(State& state, const size_t num_bodies, const double bh_theta);

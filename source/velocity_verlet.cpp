@@ -1,7 +1,6 @@
 #include "velocity_verlet.hpp"
 
 #include <cmath>
-#include <vector>
 
 void vv_update_pos(double& pos, const double vel, const double acc, const double dt) {
   pos += (vel * dt + acc * dt * dt / 2);
@@ -160,6 +159,25 @@ struct Node {
   }
 };
 
+void get_system_dimensions(State& state, const size_t num_bodies) {
+  double max_x {state.positions[0]};
+  double min_x {state.positions[0]};
+  double max_y {state.positions[1]};
+  double min_y {state.positions[1]};
+
+  // get system dimensions
+  for (int i {1}; i < num_bodies; ++i) {
+    if (state.positions[2*i] > max_x) max_x = state.positions[2*i];
+    if (state.positions[2*i] < min_x) min_x = state.positions[2*i];
+    if (state.positions[2*i + 1] > max_y) max_y = state.positions[2*i + 1];
+    if (state.positions[2*i + 1] < min_y) min_y = state.positions[2*i + 1];
+  } // TODO
+  
+  double width { max_x - min_x };
+  double height { max_y - min_y };
+  state.system_dimensions = { width, height, (min_x + max_x) / 2, (min_y + max_y) / 2 };
+}
+
 void barnes_hut(State& state, const size_t num_bodies, const double bh_theta) {
   double max_x {state.positions[0]};
   double min_x {state.positions[0]};
@@ -204,8 +222,38 @@ void barnes_hut(State& state, const size_t num_bodies, const double bh_theta) {
   delete root;
 };
 
-void velocity_verlet(State& state, const int algorithm, const size_t num_bodies, const double bh_theta) {
-  if (algorithm != 0) return; // TODO
+// brute force call using velocity verlet integrator
+void vv_brute_force(State& state, const size_t num_bodies) {
+  double dt {state.physics.dt};
+
+  // *2 as 2d vectors
+  for (size_t i {0}; i < num_bodies * 2; ++i) {
+    vv_update_pos(state.positions[i], state.velocities[i], state.accelerations[i], dt);
+  };
+
+  get_system_dimensions(state, num_bodies);
+
+  // loop across each body to update vel and acc
+  for (size_t i {0}; i < num_bodies; ++i) {
+    double acc_x_new {0};
+    double acc_y_new {0};
+
+    // sum acceleration on i from each body, add to existing acc
+    for (size_t j {0}; j < num_bodies; ++j) {
+      acceleration_brute_force(state, i, j, acc_x_new, acc_y_new);
+    };
+
+    vv_update_vel(state.velocities[2*i], state.accelerations[2*i], acc_x_new, dt);
+    vv_update_vel(state.velocities[2*i + 1], state.accelerations[2*i + 1], acc_y_new, dt);
+    state.accelerations[i * 2] = acc_x_new;
+    state.accelerations[i * 2 + 1] = acc_y_new;
+  };
+
+  return;
+}
+
+// barnes hut call using velocity verlet integrator
+void vv_barnes_hut(State& state, const size_t num_bodies, const double bh_theta) {
   double dt {state.physics.dt};
 
   // *2 as 2d vectors
@@ -214,22 +262,6 @@ void velocity_verlet(State& state, const int algorithm, const size_t num_bodies,
   };
 
   barnes_hut(state, num_bodies, bh_theta);
-
-  // loop across each body to update vel and acc
-  // for (size_t i {0}; i < num_bodies; ++i) {
-  //   double acc_x_new {0};
-  //   double acc_y_new {0};
-  //
-  //   // sum acceleration on i from each body, add to existing acc
-  //   for (size_t j {0}; j < num_bodies; ++j) {
-  //     acceleration_brute_force(state, i, j, acc_x_new, acc_y_new);
-  //   };
-  //
-  //   vv_update_vel(state.velocities[2*i], state.accelerations[2*i], acc_x_new, dt);
-  //   vv_update_vel(state.velocities[2*i + 1], state.accelerations[2*i + 1], acc_y_new, dt);
-  //   state.accelerations[i * 2] = acc_x_new;
-  //   state.accelerations[i * 2 + 1] = acc_y_new;
-  // };
 
   return;
 }

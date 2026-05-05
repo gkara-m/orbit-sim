@@ -6,16 +6,33 @@ auto sim_entry(std::shared_ptr<SharedState> shared_state, Settings settings) -> 
   if (num_bodies == 0) return 1;
   if (settings.integrator != 0) return 1;
 
-  if (settings.use_steps == false) {
-    while (shared_state->keep_running) {
-      velocity_verlet(shared_state->state, settings.algorithm ,num_bodies, settings.bh_theta);
-    };
-    return 0;
+  if (settings.algorithm == 0) {
+    if (settings.use_steps == false) {
+      while (shared_state->keep_running) {
+        vv_brute_force(shared_state->state, num_bodies);
+      };
+      return 0;
 
-  } else {for (int i {0}; i < settings.steps; i++) {
-      velocity_verlet(shared_state->state, settings.algorithm, num_bodies, settings.bh_theta);
+    } else {for (int i {0}; i < settings.steps; i++) {
+        vv_brute_force(shared_state->state, num_bodies);
+      };
+      return 0;
     };
-    return 0;
-
   };
+
+  if (settings.algorithm == 1) {
+    if (settings.use_steps == false) {
+      while (shared_state->keep_running) {
+        vv_barnes_hut(shared_state->state, num_bodies, settings.bh_theta);
+      };
+      return 0;
+
+    } else {for (int i {0}; i < settings.steps; i++) {
+        vv_barnes_hut(shared_state->state, num_bodies, settings.bh_theta);
+      };
+      return 0;
+    };
+  };
+
+  return 1;
 }
